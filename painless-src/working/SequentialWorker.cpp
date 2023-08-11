@@ -46,6 +46,15 @@ void * mainWorker(void *arg)
 
       do {
          res = sq->solver->solve(sq->actualCube);
+	 /*
+	 printf("res");
+	 if (res == SAT)
+	 	 printf(" SAT\n");
+	 else if (res == UNSAT)
+	 	 printf(" UNSAT\n");
+	 else
+	 	 printf(" UNKNOWN\n");
+	 */
       } while (sq->force == false && res == UNKNOWN);
 
       sq->waitInterruptLock.unlock();

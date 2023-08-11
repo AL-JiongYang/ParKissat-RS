@@ -64,9 +64,15 @@ public:
    /// Get the input cnf filename.
    static char * getFilename()
    {
-      static char * ret = filename;
+      char * ret = filename;
 
       return ret;
+   }
+
+   // Set the cnf filename
+   static void setFilename(char * tempfile)
+   {
+      filename = tempfile;
    }
 
    /// Print all parameters.

@@ -41,6 +41,7 @@ public:
    ofstream outputf;
    /// Load formula from a given dimacs file, return false if failed.
    bool loadFormula(const char* filename);
+   bool loadFormula(FILE* tempfile);
 
    /// Get the number of variables of the current resolution.
    int getVariablesCount();

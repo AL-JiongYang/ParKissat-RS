@@ -94,6 +94,7 @@ public:
    virtual void setBumpVar(int v) = 0;
 
    virtual bool loadFormula(const char* filename) = 0;
+   virtual bool loadFormula(FILE* tempfile)=0;
 
    /// Get the number of variables of the current resolution.
    virtual int getVariablesCount() = 0;

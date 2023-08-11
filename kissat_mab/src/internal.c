@@ -319,7 +319,7 @@ void kissat_print_statistics(kissat *solver)
 void kissat_add(kissat *solver, int elit)
 {
   kissat_require_initialized(solver);
-  kissat_require(!GET(searches), "incremental solving not supported");
+  // kissat_require(!GET(searches), "incremental solving not supported");
 #if !defined(NDEBUG) || !defined(NPROOFS) || defined(LOGGING)
   const int checking = kissat_checking(solver);
   const bool logging = kissat_logging(solver);
@@ -583,7 +583,7 @@ int kissat_solve(kissat *solver)
   kissat_require_initialized(solver);
   kissat_require(EMPTY_STACK(solver->clause.lits),
                  "incomplete clause (terminating zero not added)");
-  kissat_require(!GET(searches), "incremental solving not supported");
+  // kissat_require(!GET(searches), "incremental solving not supported");
   return kissat_search(solver);
 }
 

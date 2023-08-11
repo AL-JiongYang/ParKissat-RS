@@ -13,7 +13,7 @@ OPTION( bumpreasons, 1, 0, 1, "bump reason side literals too") \
 OPTION( ccanr, 0, 0, 1, "enable ccanr") \
 OPTION( ccanr_dynamic_bms, 20, 0, 10000, "bms*10") \
 OPTION( ccanr_gap_inc, 1024, 0, 100000, "restart gap inc") \
-DBGOPT( check, 2, 0, 2, "check model (1) and derived clauses (2)") \
+DBGOPT( check, 1, 0, 2, "check model (1) and derived clauses (2)") \
 OPTION( chrono, 1, 0, 1, "allow chronological backtracking") \
 OPTION( chronolevels, 100, 0, INT_MAX, "maximum jumped over levels") \
 OPTION( compact, 1, 0, 1, "enable compacting garbage collection") \
@@ -90,7 +90,7 @@ OPTION( restart, 1, 0, 1, "enable restarts") \
 OPTION( restartint, 1, 1, 1e4, "base restart interval") \
 OPTION( restartmargin, 10, 0, 25, "fast/slow margin in percent") \
 OPTION( seed, 0, 0, INT_MAX, "random seed") \
-OPTION( simplify, 1, 0, 1, "enable probing and elimination") \
+OPTION( simplify, 0, 0, 1, "enable probing and elimination") \
 OPTION( stable, STABLE_DEFAULT, 0, 2, "enable stable search mode") \
 OPTION( stablebias, 100, 0, 1e3, "stable bias in percent") \
 NQTOPT( statistics, 0, 0, 1, "print complete statistics") \

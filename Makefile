@@ -3,7 +3,7 @@ all:
 	###               kissat_mab                   ###
 	##################################################
 	chmod a+x kissat_mab/configure kissat_mab/scripts/*.sh
-	cd kissat_mab && ./configure --compact
+	cd kissat_mab && ./configure --compact --quiet 
 	+ $(MAKE) -C kissat_mab
 
 	##################################################
@@ -19,3 +19,6 @@ clean:
 	+ $(MAKE) clean -C painless-src
 	+ $(MAKE) clean -C kissat_mab
 	rm -f parkissat
+
+install:
+	install -m 755 parkissat /usr/local/bin

@@ -1,0 +1,4 @@
+kissat_mab/build
+kissat_mab/makefile
+*.txt
+*.o

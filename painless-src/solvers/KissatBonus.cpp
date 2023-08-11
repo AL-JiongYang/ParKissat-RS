@@ -24,6 +24,7 @@ extern "C" {
    #include "src/internal.h"
    #include "src/witness.h"
    #include "src/import.h"
+   #include "src/backtrack.h"
 }
 #include "../utils/Logger.h"
 #include "../utils/System.h"
@@ -172,6 +173,23 @@ KissatBonusSolver::loadFormula(const char* filename)
    return true;
 }
 
+bool
+KissatBonusSolver::loadFormula(FILE* tempfile)
+{
+   kissat_mab_parse(solver);
+   strictness strict = NORMAL_PARSING;
+   file in;
+   uint64_t lineno;
+   in.file = tempfile;
+   in.close = false;
+   in.reading = true;
+   in.compressed = false;
+   in.bytes = 0;
+   kissat_parse_dimacs(solver, strict, &in, &lineno, &solver->max_var);
+   kissat_close_file(&in);
+   return true;
+}
+
 //Get the number of variables of the formula
 int
 KissatBonusSolver::getVariablesCount()
@@ -310,13 +328,19 @@ KissatBonusSolver::solve(const std::vector<int> & cube)
 
    tmp.clear();
    clausesToAdd.getClauses(tmp);
+   kissat_backtrack(solver, 0);
    for (size_t ind = 0; ind < tmp.size(); ind++) {
       for (size_t i = 0; i < tmp[ind]->size; i++)
          kissat_add(solver, tmp[ind]->lits[i]);
       kissat_add(solver, 0);
       ClauseManager::releaseClause(tmp[ind]);
    }
-   assert(cube.size() == 0);
+   // assert(cube.size() == 0);
+   for (auto lit: cube) {
+     // add assumptions as input constraints
+     kissat_add(solver, lit);
+     kissat_add(solver, 0);
+   }
    int res = kissat_solve(solver);
    if (res == 10)
       return SAT;

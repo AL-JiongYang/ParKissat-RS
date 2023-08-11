@@ -257,7 +257,7 @@ bool local_search(kissat *solver, CCAnr *lssolver)
 	return false;
 }
 
-inline void unsat(CCAnr *lssolver, int clause)
+static void unsat(CCAnr *lssolver, int clause)
 {
 	lssolver->index_in_unsat_stack[clause] = lssolver->unsat_stack_fill_pointer;
 	push(clause,lssolver->unsat_stack);
@@ -275,7 +275,7 @@ inline void unsat(CCAnr *lssolver, int clause)
 	}
 }
 
-inline void sat(CCAnr *lssolver, int clause)
+static void sat(CCAnr *lssolver, int clause)
 {
 	int index,last_unsat_clause;
 

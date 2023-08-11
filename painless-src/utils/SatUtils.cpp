@@ -55,6 +55,19 @@ void printModel(std::vector<int> & model)
   printf("\n");
 }
 
+void printModelToFile(std::vector<int> & model, const char* filename)
+{
+  ofstream fout(filename);
+
+  model.push_back(0);
+  
+  for (auto lit: model) {
+    if (lit >= 0)
+      fout << lit << ' ';
+  }
+
+  fout.close();
+}
 
 bool loadFormulaToSolvers(std::vector<SolverInterface*> solvers,
                           const char* filename)

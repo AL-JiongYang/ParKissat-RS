@@ -9,8 +9,10 @@ LIBS = -lkissat -L../kissat_mab/build \
 
 CXXFLAGS = -I. \
            -I../kissat_mab \
+					 -DCOMPACT -DNEMBEDDED -DNMETRICS -DQUIET -DNSTATISTICS \
            -D __STDC_LIMIT_MACROS -D __STDC_FORMAT_MACROS \
            -fopenmp -std=c++17 -O3 -D NDEBUG
+					 # -g -DQUIET \
 
 $(EXEC): $(OBJS)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LIBS)

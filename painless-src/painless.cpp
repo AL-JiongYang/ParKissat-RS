@@ -35,6 +35,8 @@
 
 #include <unistd.h>
 
+#include <string>
+
 // -------------------------------------------
 // Declaration of global variables
 // -------------------------------------------
@@ -51,6 +53,8 @@ SatResult finalResult = UNKNOWN;
 std::vector<int> finalModel;
 simplify *S;
 
+FILE * tmpf;
+
 void * readWorker(void *arg)
 {
    SolverInterface * sq = (SolverInterface *)arg;
@@ -58,7 +62,29 @@ void * readWorker(void *arg)
       sq->addOriginClauses(S);
    else 
       sq->loadFormula(Parameters::getFilename());
+      // sq->loadFormula(tmpf);
    return NULL;
+}
+
+#include <cstdio>
+#include <iostream>
+#include <sstream>
+#include <memory>
+#include <stdexcept>
+#include <array>
+#include <fstream>
+
+std::string exec(const string cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
 }
 
 // -------------------------------------------
@@ -86,8 +112,16 @@ int main(int argc, char ** argv)
       cout << "\t-v=<INT>\t\t verbosity level, default is 0" << endl;
       cout << "\t-simp\t\t simplify" << endl;
       cout << "\t-initshuffle\t\t initshuffle" << endl;
+
       return 0;
    }
+
+   // tmpf = tmpfile();
+   // fputs(output.c_str(), tmpf);
+   // std::rewind(tmpf);
+
+
+   // set up parkissat
 
    // Parameters::printParams();
    // printf("c file: %s\n", Parameters::getFilename());
@@ -164,6 +198,7 @@ int main(int argc, char ** argv)
       pthread_join(ptr[i], NULL);
    }    
    delete []ptr;
+   // cout << "nvar: " << solvers[0]->getVariablesCount() << endl;
    
    if (Parameters::getBoolParam("simp")) 
       S->clause.clear(true);
@@ -231,33 +266,87 @@ int main(int argc, char ** argv)
       break;
    }
 
-   // Init working
-   working = new Portfolio();
-   for (size_t i = 0; i < nSolvers; i++) {
-      working->addSlave(new SequentialWorker(solvers[i]));
-   }
-
-
    // Init the management of clauses
    ClauseManager::initClauseManager();
 
 
-   // Launch working
-   std::vector<int> cube;
-   working->solve(cube);
+   // run parkissat
+   string csv_file = "output.csv";
+   ofstream results(csv_file, ios_base::app);
+   bool sat = true;
+   int bound = 10;
+   double startTime;
 
 
-   // Wait until end or timeout
-   int timeout = Parameters::getIntParam("t", -1);
+   while (sat && bound > 0) {
+      cout << bound << ' ' << flush;
+      startTime = getRelativeTime();
 
-   while(globalEnding == false) {
-      sleep(1);
+      // Init parallel solving
+      globalEnding = false;
+      if (working) 
+        delete working;
 
-      if (timeout > 0 && getRelativeTime() >= timeout) {
-         globalEnding = true;
-         working->setInterrupt();
+      working = new Portfolio();
+      for (size_t i = 0; i < nSolvers; i++) {
+         working->addSlave(new SequentialWorker(solvers[i]));
       }
+
+
+      // update
+      std::vector<int> cube;
+      cube.push_back(1);
+
+
+      // Launch solving
+      working->solve(cube);
+
+
+      // Wait until end or timeout
+      int timeout = Parameters::getIntParam("t", -1);
+
+      while(globalEnding == false) {
+         sleep(1);
+
+         if (timeout > 0 && getRelativeTime() >= timeout) {
+            globalEnding = true;
+            working->setInterrupt();
+         }
+      }
+
+
+      if (finalResult == SAT) {
+         cout << "SAT" << endl;
+         if (Parameters::getBoolParam("no-model") == false) {
+            if (Parameters::getBoolParam("simp")) {
+               for (int i = 1; i <= S->orivars; i++)
+                  if (S->mapto[i]) S->mapval[i] = (finalModel[abs(S->mapto[i])-1] > 0 ? 1 : -1) * (S->mapto[i] > 0 ? 1 : -1);
+               S->print_complete_model();
+               finalModel.clear();
+               for (int i = 1; i <= S->orivars; i++) {
+                  finalModel.push_back(i * S->mapval[i]);
+               }
+               printModel(finalModel);
+            }
+            else
+               // printModel(finalModel);
+               printModelToFile(finalModel, "sol.txt");
+         }
+      } else if (finalResult == UNSAT) {
+         cout << "UNSAT" << endl;
+      } else {
+         cout << "UNKNOWN" << endl;
+      }
+
+      sat = (finalResult == SAT);
+      // cout << "time: " << int((getRelativeTime() - startTime)*1000) << endl;
+      results << (sat ? "True" : "False") << ',' << endl;
+
+      bound -= 1;  
    }
+
+
+   results.close();
 
 
    // Delete sharers
@@ -283,27 +372,6 @@ int main(int argc, char ** argv)
    // Print the result and the model if SAT
    // cout << "c Resolution time: " << getRelativeTime() << "s" << endl;
 
-   if (finalResult == SAT) {
-      cout << "s SATISFIABLE" << endl;
-      if (Parameters::getBoolParam("no-model") == false) {
-         if (Parameters::getBoolParam("simp")) {
-            for (int i = 1; i <= S->orivars; i++)
-               if (S->mapto[i]) S->mapval[i] = (finalModel[abs(S->mapto[i])-1] > 0 ? 1 : -1) * (S->mapto[i] > 0 ? 1 : -1);
-            S->print_complete_model();
-            finalModel.clear();
-            for (int i = 1; i <= S->orivars; i++) {
-               finalModel.push_back(i * S->mapval[i]);
-            }
-            printModel(finalModel);
-         }
-         else
-            printModel(finalModel);
-      }
-   } else if (finalResult == UNSAT) {
-      cout << "s UNSATISFIABLE" << endl;
-   } else {
-      cout << "s UNKNOWN" << endl;
-   }
 
    return 0;
 }
